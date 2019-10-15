@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Data Collector</string>
+    <string name="startButton">Start</string>
+    <string name="stopButton">Stop</string>
+    <string name="endButton">End</string>
+    <string name="sendDataSwitch">Save the data?</string>
+    <string name="predictDataSwitch">Predict the data \n with the model?</string>
+    <string name="default_group_nr">1</string>
+
+<!--    <string-array name="activity_spinner">-->
+<!--        <item>test Nr</item>-->
+<!--        <item>walking</item>-->
+<!--        <item>standing</item>-->
+<!--        <item>jogging</item>-->
+<!--        <item>sitting</item>-->
+<!--        <item>biking</item>-->
+<!--        <item>upstairs</item>-->
+<!--        <item>downstairs</item>-->
+<!--        <item>Undefined</item>-->
+<!--    </string-array>-->
+</resources>
