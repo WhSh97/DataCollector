@@ -13,6 +13,7 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     //declare initial variables for data gathering
     private static final int PROX_SENSOR_SENSITIVITY = 4;
-    private String currActivity;
+    private String currActivity="NoActivitySelected";
     private final String MAIN_TAG = this.getClass().getSimpleName();
     private SensorManager sm;
     private boolean sendData;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, List<Double>> recordingAccelero;
     private Map<String, List<Double>> recordingLinAccelero;
     private Map<String, List<Double>> recordingGyro;
-    //private Map<String, List<Double>> recordingMagno;
+    private Map<String, List<Double>> recordingMagno;
     //private Map<String, List<Double>> recordingProx;
 
     //creating the calculator
@@ -98,18 +99,18 @@ public class MainActivity extends AppCompatActivity {
     private final Attribute attributeModeGyro = new Attribute("ModeGyroSMV");
     private final Attribute attributeStdGyro = new Attribute("StdGyroSMV");
 
-//    private final Attribute attributeMinProx = new Attribute("MinProxSMV");
-//    private final Attribute attributeMaxProx = new Attribute("MaxProxSMV");
-//    private final Attribute attributeMeanProx = new Attribute("MeanProxSMV");
-//    private final Attribute attributeModeProx = new Attribute("ModeProxSMV");
-//    private final Attribute attributeStdProx = new Attribute("StdProxSMV");
+    private final Attribute attributeMinMagno = new Attribute("MinMagnoSMV");
+    private final Attribute attributeMaxMagno = new Attribute("MaxMagnoSMV");
+    private final Attribute attributeMeanMagno = new Attribute("MeanMagnoSMV");
+    private final Attribute attributeModeMagno = new Attribute("ModeMagnoSMV");
+    private final Attribute attributeStdMagno = new Attribute("StdMagnoSMV");
 
     private String predictedActivity;
 
     private Sensor accelero;
     private Sensor lin_accelero;
     private Sensor gyro;
-    //private Sensor magnetic;
+    private Sensor magnetic;
     private Sensor prox;
 
     private SensorEventListener allsel;
@@ -129,10 +130,10 @@ public class MainActivity extends AppCompatActivity {
     private static double zLinAco;
     private long tlin_Aco;
 
-//    private static double xMag;
-//    private static double yMag;
-//    private static double zMag;
-//    private long tMag;
+    private static double xMag;
+    private static double yMag;
+    private static double zMag;
+    private long tMag;
 
     //private static  double xProx;
 
@@ -154,17 +155,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        // set up dropdown menu / spinner
-//        Spinner spinner = findViewById(R.id.activitySpinner);
-//        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-//                R.array.activity_spinner, android.R.layout.simple_spinner_item);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        spinner.setAdapter(adapter);
-//
-//        spinner = findViewById(R.id.activitySpinner);
-//        spinner.setOnItemSelectedListener(new SpinnerActivity());
-
+        
         stopButton = findViewById(R.id.stopButton);
         startButton = findViewById(R.id.startButton);
 
@@ -180,21 +171,18 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.resultTextView);
         textView.setMovementMethod(new ScrollingMovementMethod());
-
-        //textInput = findViewById(R.id.groupNumberText);
-        //groupNr = Integer.parseInt(textInput.getText().toString());
-
+        
         recordingAccelero = new HashMap<>(3);
         recordingLinAccelero = new HashMap<>(3);
         recordingGyro = new HashMap<>(3);
-        //recordingMagno = new HashMap<>(3);
+        recordingMagno = new HashMap<>(3);
         //recordingProx= new HashMap<>();
 
         recording = new HashMap<>();
         recording.put("Accelero", recordingAccelero);
         recording.put("LinAccelero", recordingLinAccelero);
         recording.put("Gyro", recordingGyro);
-        //recording.put("Magno", recordingMagno);
+        recording.put("Magno", recordingMagno);
         //recording.put("Prox", recordingProx);
 
         for (Map.Entry<String, Map<String, List<Double>>> mapEntry : recording.entrySet()) {
@@ -204,19 +192,9 @@ public class MainActivity extends AppCompatActivity {
             mapEntry.getValue().put("magnitude", new ArrayList<Double>());
             recording.put(mapEntry.getKey(), mapEntry.getValue());
         }
-
-//        Log.d(MAIN_TAG, "size: " + recording.entrySet());
-//        for (Map.Entry<String, Map<String, Double>> mapEntry : recording.entrySet()) {
-//            Log.d(MAIN_TAG, "kes:" + mapEntry.getValue().get("min"));
-//        }
-
+        
         AssetManager assetManager = getAssets();
         try {
-//            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("p1-rightpocket-naivebayes-model.model"));
-//            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("all_part-left-pocket-j48.model"));
-//            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("self_collected-random_forest.model"));
-//            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("self_collected-lmt_trees.model"));
-            //mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("best-trees-randomforrest.model"));
             mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("model6.model"));
 
         } catch (Exception e) {
@@ -229,11 +207,11 @@ public class MainActivity extends AppCompatActivity {
         classes = new ArrayList<String>(3) {
             {
                 add("Aiming");
-//                add("NotAimingStanding");
-//                //add("NotAimingHand");
-//                add("NotAimingWalking");
-//                add("AimingWalking");
-                //add("Defending");
+                add("NotAimingStanding");
+                add("NotAimingHand");
+                add("NotAimingWalking");
+                add("AimingWalking");
+                add("Defending");
                 add("Shooting");
                 add("NotAiming");
             }
@@ -258,11 +236,11 @@ public class MainActivity extends AppCompatActivity {
                 add(attributeMeanGyro);
                 add(attributeModeGyro);
                 add(attributeStdGyro);
-//                add(attributeMinProx);
-//                add(attributeMaxProx);
-//                add(attributeMeanProx);
-//                add(attributeModeProx);
-//                add(attributeStdProx);
+                add(attributeMinMagno);
+                add(attributeMaxMagno);
+                add(attributeMeanMagno);
+                add(attributeModeMagno);
+                add(attributeStdMagno);
                 Attribute attributeClass = new Attribute("@@class@@", classes);
                 add(attributeClass);
             }
@@ -273,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        // File exist
+        // CSV File exist
         if (f.exists() && !f.isDirectory()) {
             FileWriter mFileWriter = null;
             try {
@@ -283,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
             }
             writer = new CSVWriter(mFileWriter);
         }
-        //File does not exist
+        //CSV File does not exist
         else {
             Log.d("Test","I'm in the eslse");
             try {
@@ -295,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
             String[] data={"Activity","MinAcoSMV", "MaxAcoSMV", "MeanAcoSMV","ModeAcoSMV","StdAcoSMV"
                     ,"MinLinAcoSMV", "MaxLinAcoSMV", "MeanLinAcoSMV","ModeLinAcoSMV","StdLinAcoSMV",
                     "MinGyroSMV", "MaxGyroSMV", "MeanGyroSMV","ModeGyroSMV","StdGyroSMV",
-                    //"MinProxSMV", "MaxProxSMV", "MeanProxSMV","ModeProxSMV","StdProxSMV"
+                    "MinMagnoSMV", "MaxMagnoSMV", "MeanMagnoSMV","ModeMagnoSMV","StdMagnoSMV"
             };
             writer.writeNext(data);
             Log.d("Test","I managed to write the headers");
@@ -337,25 +315,26 @@ public class MainActivity extends AppCompatActivity {
             case R.id.shooting:
                 currActivity="Shooting";
                 return true;
-//            case R.id.NotAimingStanding:
-//                currActivity="NotAimingStanding";
-//                return true;
-//            case R.id.NotAimingHand:
-//                currActivity="NotAimingHand";
-//                return true;
-//            case  R.id.NotAimingWalking:
-//                currActivity="NotAimingWalking";
-//                return true;
-//            case R.id.AimingWalking:
-//                currActivity="AimingWalking";
-//                return true;
+            case R.id.NotAimingStanding:
+                currActivity="NotAimingStanding";
+                return true;
+            case R.id.NotAimingHand:
+                currActivity="NotAimingHand";
+                return true;
+            case  R.id.NotAimingWalking:
+               currActivity="NotAimingWalking";
+                return true;
+            case R.id.AimingWalking:
+                currActivity="AimingWalking";
+                return true;
 
 //                    add("NotAimingStanding");
 //                add("NotAimingHand");
 //                add("NotAimingWalking");
 //                add("AimingWalking");
             default:
-                return super.onOptionsItemSelected(item);
+                currActivity="NoActivitySelected";
+                return true;
         }
     }
 
@@ -368,18 +347,17 @@ public class MainActivity extends AppCompatActivity {
         // register sensor and Activity from field
         accelero = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         lin_accelero = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        //magnetic = sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        //magnetic = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        magnetic = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         prox=sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-
-        // this
+        
         allsel = new AllSensorEventListener();
         sm.registerListener(allsel, accelero, SensorManager.SENSOR_DELAY_FASTEST);
         sm.registerListener(allsel, lin_accelero, SensorManager.SENSOR_DELAY_FASTEST);
         sm.registerListener(allsel, gyro, SensorManager.SENSOR_DELAY_FASTEST);
         sm.registerListener(allsel, prox, SensorManager.SENSOR_DELAY_FASTEST);
-        //sm.registerListener(allsel, magnetic, SensorManager.SENSOR_DELAY_FASTEST);
+        sm.registerListener(allsel, magnetic, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public class AllSensorEventListener implements SensorEventListener {
@@ -414,19 +392,19 @@ public class MainActivity extends AppCompatActivity {
                 recording.get("LinAccelero").get("magnitude").add(magnitudeLinAco);
 
             }
-//            else if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-//                xMag = sensorEvent.values[0];
-//                yMag = sensorEvent.values[1];
-//                zMag = sensorEvent.values[2];
-//                tMag = sensorEvent.timestamp;
-//                double magnitudeMag = magnitude(xMag, yMag, zMag);
-//
-//                recording.get("Magno").get("x").add(xMag);
-//                recording.get("Magno").get("y").add(yMag);
-//                recording.get("Magno").get("z").add(zMag);
-//                recording.get("Magno").get("magnitude").add(magnitudeMag);
+            else if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                xMag = sensorEvent.values[0];
+                yMag = sensorEvent.values[1];
+                zMag = sensorEvent.values[2];
+                tMag = sensorEvent.timestamp;
+                double magnitudeMag = magnitude(xMag, yMag, zMag);
 
-            //}
+                recording.get("Magno").get("x").add(xMag);
+                recording.get("Magno").get("y").add(yMag);
+                recording.get("Magno").get("z").add(zMag);
+                recording.get("Magno").get("magnitude").add(magnitudeMag);
+
+            }
             else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 xGyr = sensorEvent.values[0];
                 yGyr = sensorEvent.values[1];
@@ -549,9 +527,16 @@ public class MainActivity extends AppCompatActivity {
                         setValue( attributeModeLinAco, linAcceleroMap.get("mode") ) ;
                         setValue( attributeStdLinAco, linAcceleroMap.get("std") ) ;
 
+                        setValue( attributeMinMagno, magnoMap.get("min") );
+                        setValue( attributeMaxMagno, magnoMap.get("max") );
+                        setValue( attributeMeanMagno, magnoMap.get("mean") );
+                        setValue( attributeModeMagno, magnoMap.get("mode") ) ;
+                        setValue( attributeStdMagno, magnoMap.get("std") ) ;
+
                     }
                 };
 
+                double[] confidence={0};
                 double predictionDouble = 0;
                 //predictData=false;
                 if (predictData) {
@@ -559,7 +544,13 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         predictionDouble = mClassifier.classifyInstance(newInstance);
                         predictedActivity = newInstance.classAttribute().value((int) predictionDouble);
+
                         Log.d(MAIN_TAG, "the prediction was: "+ predictionDouble + " which i think is: " + predictedActivity);
+
+                        confidence=mClassifier.distributionForInstance(newInstance);
+                        //Toast.makeText(getApplicationContext(), , Toast.LENGTH_SHORT).show();
+
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -570,9 +561,10 @@ public class MainActivity extends AppCompatActivity {
 
                 String baseInformation = "currAct= " + currActivity +
                         ", predDoub= " + predictionDouble +
-                        ", predAct= " + predictedActivity;
+                        ", predAct= " + predictedActivity
+                        + "Confidence was "+Double.toString(confidence[0]);
 
-                textView.append(baseInformation+"\n");
+                //textView.append(baseInformation+"\n");
 
 //
 //
@@ -629,7 +621,7 @@ public class MainActivity extends AppCompatActivity {
 //                            "&ModeGyroSMV="+gyroMap.get("mode")+
 //                            "&StdGyroSMV="+gyroMap.get("std")
 //                }
-                  if(sendData){
+                  if(sendData && currActivity!="NoActivitySelected"){
                       String[] myData={currActivity,
                               Double.toString(acceleroMap.get("min")),
                               Double.toString(acceleroMap.get("max")),
@@ -646,8 +638,15 @@ public class MainActivity extends AppCompatActivity {
                               Double.toString(gyroMap.get("mean")),
                               Double.toString(gyroMap.get("mode")),
                               Double.toString(gyroMap.get("std")),
+                              Double.toString(magnoMap.get("min")),
+                              Double.toString(magnoMap.get("max")),
+                              Double.toString(magnoMap.get("mean")),
+                              Double.toString(magnoMap.get("mode")),
+                              Double.toString(magnoMap.get("std"))
                       };
                       writer.writeNext(myData);
+                      String str = TextUtils.join(",", myData);
+                      textView.append(str+'\n');
                   }
 
 
@@ -669,8 +668,6 @@ public class MainActivity extends AppCompatActivity {
         sm.unregisterListener(allsel);
         groupNr++;
 
-        textInput.getText().clear();
-        textInput.getText().insert(0, Integer.toString(groupNr));
     }
 
     public void endApp(View view) {
