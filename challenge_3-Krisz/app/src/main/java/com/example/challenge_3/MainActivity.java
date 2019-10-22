@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import weka.classifiers.Classifier;
 import weka.core.Attribute;
@@ -332,11 +333,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.Running:
                 currActivity="Running";
                 return true;
-
-//                    add("NotAimingStanding");
-//                add("NotAimingHand");
-//                add("NotAimingWalking");
-//                add("AimingWalking");
             default:
                 currActivity="NoActivitySelected";
                 return true;
@@ -348,6 +344,12 @@ public class MainActivity extends AppCompatActivity {
     public void startScan(View view) {
         stopButton.setEnabled(true);
         startButton.setEnabled(false);
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // register sensor and Activity from field
         accelero = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -571,61 +573,9 @@ public class MainActivity extends AppCompatActivity {
 
                 //textView.append(baseInformation+"\n");
 
-//
-//
-
-//                String[] data = {""};
-//                writer.writeNext(data);
-//
-//                try {
-//                    writer.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-                result +=  baseInformation
-//                        ", xmin: " + min+
-//                        ", xmax: " + max +
-//                        ", groupnr= " + groupNr
-//                        ", acosmv= " +   acoSmv +
-//                        ", linsmv= " +    linacoSmv +
-//                        ", gyrosmv= "+    gyrSmv+
-//                        ", xAco: " +    xAco +
-//                        ", yAco: " +    yAco +
-//                        ", zAco: " +    zAco +
-//                        ", xLinAco: " + xLinAco +
-//                        ", yLinAco: " + yLinAco +
-//                        ", zLinAco: " + zLinAco +
-//                        ", xGyr: " +    xGyr +
-//                        ", yGyr: " +    yGyr +
-//                        ", zGyr: " +    zGyr +
-//                        ", xMag: " +    xMag +
-//                        ", yMag: " +    yMag +
-//                        ", zMag: " +    zMag
-                ;
-
-
+                result +=  baseInformation;
                 Log.d(MAIN_TAG, "time: " + sensorEvent.timestamp + " " +result);
 
-//                if (sendData) {
-//
-////
-//                            "activity="+predictedActivity+
-//                            "&MinAcoSMV="+acceleroMap.get("min")+
-//                            "&MaxAcoSMV="+acceleroMap.get("max")+
-//                            "&MeanAcoSMV="+acceleroMap.get("mean")+
-//                            "&ModeAcoSMV="+acceleroMap.get("mode")+
-//                            "&StdAcoSMV="+acceleroMap.get("std")+
-//                            "&MinLinAcoSMV="+linAcceleroMap.get("min")+
-//                            "&MaxLinAcoSMV="+linAcceleroMap.get("max")+
-//                            "&MeanLinAcoSMV="+linAcceleroMap.get("mean")+
-//                            "&ModeLinAcoSMV="+linAcceleroMap.get("mode")+
-//                            "&StdLinAcoSMV="+linAcceleroMap.get("std")+
-//                            "&MinGyroSMV="+gyroMap.get("min")+
-//                            "&MaxGyroSMV="+gyroMap.get("max")+
-//                            "&MeanGyroSMV="+gyroMap.get("mean")+
-//                            "&ModeGyroSMV="+gyroMap.get("mode")+
-//                            "&StdGyroSMV="+gyroMap.get("std")
-//                }
                   if(sendData && currActivity!="NoActivitySelected"){
                       String[] myData={currActivity,
                               Double.toString(acceleroMap.get("min")),
