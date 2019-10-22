@@ -87,7 +87,7 @@
         android:id="@+id/predictDataSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="44dp"
         android:checked="false"
         android:text="@string/predictDataSwitch"
         app:layout_constraintStart_toStartOf="@+id/guideline"
@@ -97,7 +97,7 @@
         android:id="@+id/sendDataSwitch"
         android:layout_width="119dp"
         android:layout_height="41dp"
-        android:layout_marginStart="88dp"
+        android:layout_marginStart="52dp"
         android:checked="false"
         android:text="@string/sendDataSwitch"
         app:layout_constraintBaseline_toBaselineOf="@+id/predictDataSwitch"
@@ -114,7 +114,9 @@
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline7" />
+        app:layout_constraintTop_toTopOf="@+id/guideline7"
+        android:gravity="bottom"
+        />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline7"
@@ -122,5 +124,17 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.43" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="148dp"
+        android:layout_marginEnd="161dp"
+        android:text="WriteData"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="166dp"
+        android:onClick="WriteData" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

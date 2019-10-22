@@ -47,6 +47,10 @@ import weka.core.DenseInstance;
 import weka.core.Instances;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
 
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private Button stopButton;
     private Button startButton;
     public String proximity;
-
+    public List<String[]> myDataList=new ArrayList<String[]>();
     private Map<String, Map<String, List<Double>>> recording;
     private Map<String, List<Double>> recordingAccelero;
     private Map<String, List<Double>> recordingLinAccelero;
@@ -209,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             {
                 add("Aiming");
                 add("NotAimingStanding");
-                //add("NotAimingHand");
+                add("NotAimingHand");
                 add("NotAimingWalking");
                 add("AimingWalking");
                 add("Defending");
@@ -309,8 +313,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.aiming:
                 currActivity="Aiming";
                 return true;
-            case R.id.not_aiming:
-                currActivity="Not Aiming";
+            case R.id.NotAimingHand:
+                currActivity="NotAimingHand";
                 return true;
             case R.id.defending:
                 currActivity="Defending";
@@ -346,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
         startButton.setEnabled(false);
 
         try {
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -571,8 +575,6 @@ public class MainActivity extends AppCompatActivity {
                         ", predAct= " + predictedActivity
                         + "Confidence was "+Double.toString(confidence[0]);
 
-                //textView.append(baseInformation+"\n");
-
                 result +=  baseInformation;
                 Log.d(MAIN_TAG, "time: " + sensorEvent.timestamp + " " +result);
 
@@ -599,9 +601,11 @@ public class MainActivity extends AppCompatActivity {
                               Double.toString(magnoMap.get("mode")),
                               Double.toString(magnoMap.get("std"))
                       };
-                      writer.writeNext(myData);
-                      String str = TextUtils.join(",", myData);
-                      textView.append(str+'\n');
+                      //writer.writeNext(myData);
+                      //String str = TextUtils.join(",", myData);
+                      //textView.append(str+'\n');
+                      textView.append(baseInformation+"\n");
+                      myDataList.add(myData);
                   }
 
 
@@ -633,6 +637,15 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+public void WriteData(View v)
+{
+    for (int i =0; i<myDataList.size(); i++)
+    {
+        writer.writeNext(myDataList.get(i));
+    }
+    myDataList.clear();
+}
+
 
     public void resetRecording() {
         for (Map.Entry<String, Map<String, List<Double>>> mapEntry : recording.entrySet()) {
