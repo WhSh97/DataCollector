@@ -8,12 +8,15 @@
             android:title="Defending" />
         <item android:id="@+id/shooting"
             android:title="Shooting" />
-        <item android:id="@+id/NotAimingHand"
-        android:title="NotAimingHand"/>
+        <item android:id="@+id/Running"
+        android:title="Running"/>
         <item android:id="@+id/NotAimingStanding"
             android:title="NotAimingStanding"/>
         <item android:id="@+id/NotAimingWalking"
             android:title="NotAimingWalking"/>
+        <item android:id="@+id/ShootingWalking"
+            android:title="ShootingWalking"/>
         <item android:id="@+id/AimingWalking"
             android:title="AimingWalking"/>
+
 </menu>

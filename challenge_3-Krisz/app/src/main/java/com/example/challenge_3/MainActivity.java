@@ -208,12 +208,13 @@ public class MainActivity extends AppCompatActivity {
             {
                 add("Aiming");
                 add("NotAimingStanding");
-                add("NotAimingHand");
+                //add("NotAimingHand");
                 add("NotAimingWalking");
                 add("AimingWalking");
                 add("Defending");
                 add("Shooting");
-                add("NotAiming");
+                add("ShootingWalking");
+                add("Running");
             }
         };
 
@@ -276,7 +277,8 @@ public class MainActivity extends AppCompatActivity {
                     "MinMagnoSMV", "MaxMagnoSMV", "MeanMagnoSMV","ModeMagnoSMV","StdMagnoSMV"
             };
             writer.writeNext(data);
-            Log.d("Test","I managed to write the headers");
+
+            //Log.d("Test","I managed to write the headers");
 
             try {
                 writer.close();
@@ -318,14 +320,17 @@ public class MainActivity extends AppCompatActivity {
             case R.id.NotAimingStanding:
                 currActivity="NotAimingStanding";
                 return true;
-            case R.id.NotAimingHand:
-                currActivity="NotAimingHand";
+            case R.id.ShootingWalking:
+                currActivity="ShootingWalking";
                 return true;
             case  R.id.NotAimingWalking:
                currActivity="NotAimingWalking";
                 return true;
             case R.id.AimingWalking:
                 currActivity="AimingWalking";
+                return true;
+            case R.id.Running:
+                currActivity="Running";
                 return true;
 
 //                    add("NotAimingStanding");
