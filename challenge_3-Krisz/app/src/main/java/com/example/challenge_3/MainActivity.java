@@ -1,8 +1,5 @@
 package com.example.challenge_3;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -13,28 +10,29 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.opencsv.CSVWriter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,14 +40,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.functions.MultilayerPerceptron;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -140,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
     private static double zMag;
     private long tMag;
 
+    public MultilayerPerceptron mp;
     //private static  double xProx;
 
     //declaring global thresholds
@@ -199,8 +194,12 @@ public class MainActivity extends AppCompatActivity {
         }
         
         AssetManager assetManager = getAssets();
+
         try {
-            mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("model6.model"));
+            //mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("model6.model"));
+           //mp=(MultilayerPerceptron) weka.core.SerializationHelper.read(assetManager.open("test.model"));
+
+            mp= (MultilayerPerceptron) (new ObjectInputStream(new FileInputStream("C:\\Users\\WhiteShadow\\Desktop\\ss\\dataCollector\\DataCollector\\challenge_3-Krisz\\app\\src\\main\\assets\\test.model"))).readObject();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -251,8 +250,9 @@ public class MainActivity extends AppCompatActivity {
                 add(attributeClass);
             }
         };
-        dataUnpredicted = new Instances("TestInstances", attributeList, 1);
+        dataUnpredicted = new Instances("TestInstances", attributeList, 100 );
         dataUnpredicted.setClassIndex(dataUnpredicted.numAttributes() - 1);
+        Toast.makeText(this, Attribute.toString(dataUnpredicted.attribute(0)), Toast.LENGTH_SHORT).show();
 
 
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -547,19 +547,21 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
 
-                double[] confidence={0};
+                double[] confidence={99};
                 double predictionDouble = 0;
                 //predictData=false;
+                predictData=true;
                 if (predictData) {
                     newInstance.setDataset(dataUnpredicted);
                     try {
-                        predictionDouble = mClassifier.classifyInstance(newInstance);
+                        predictionDouble = mp.classifyInstance(newInstance);
                         predictedActivity = newInstance.classAttribute().value((int) predictionDouble);
 
                         Log.d(MAIN_TAG, "the prediction was: "+ predictionDouble + " which i think is: " + predictedActivity);
 
-                        confidence=mClassifier.distributionForInstance(newInstance);
-                        //Toast.makeText(getApplicationContext(), , Toast.LENGTH_SHORT).show();
+                        confidence=mp.distributionForInstance(newInstance);
+                        if(mp.equals(null))
+                        Toast.makeText(getApplicationContext(),"NotClassified", Toast.LENGTH_SHORT).show();
 
 
                     } catch (Exception e) {
