@@ -23,131 +23,121 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+/*
+Todo: remake the app from scratch commenting everything, you'll need it for the report
+Todo: reed the slides from the first lecture, they might help. Same thing with the ones from Theme3
+Todo: even a non-working version of the navigator would be cool
+Todo: finish the app until the morning, be here at 8:30
+*/
+
+/*
+Todo:
+ Planing for the app:
+ *use accelerometer + features on it with weka
+ *if this really does not work, try thresholding, shouldn't be that difficult (calculate a sigma for this)
+*/
+
+//f
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.opencsv.CSVWriter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 import java.util.concurrent.TimeUnit;
 
-import weka.classifiers.Classifier;
-import weka.classifiers.functions.MultilayerPerceptron;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instances;
+import static com.example.challenge_3.Calcuations.Maximum;
+import static com.example.challenge_3.Calcuations.Mean;
+import static com.example.challenge_3.Calcuations.Minimum;
+import static com.example.challenge_3.Calcuations.StandardDev;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
 
+    static final float ALPHA = 0.2f;
+
+    protected float[] accelVals;
+
+
     //declare initial variables for data gathering
     private static final int PROX_SENSOR_SENSITIVITY = 4;
-    private String currActivity="NoActivitySelected";
+    private String currActivity = "NoActivitySelected";
     private final String MAIN_TAG = this.getClass().getSimpleName();
     private SensorManager sm;
     private boolean sendData;
     private boolean predictData;
     private TextView textView;
-    private EditText textInput;
     private Switch sendDataSwitch;
     private Switch predictDataSwitch;
-    private int groupNr;
     private Button stopButton;
     private Button startButton;
     public String proximity;
-    public List<String[]> myDataList=new ArrayList<String[]>();
-    private Map<String, Map<String, List<Double>>> recording;
-    private Map<String, List<Double>> recordingAccelero;
-    private Map<String, List<Double>> recordingLinAccelero;
-    private Map<String, List<Double>> recordingGyro;
-    private Map<String, List<Double>> recordingMagno;
-    //private Map<String, List<Double>> recordingProx;
-
+    public List<String[]> myDataList = new ArrayList<String[]>();
     //creating the calculator
-    public Calcuations calc = new Calcuations();
 
     //declaring varaibles for data classification
-    private Classifier mClassifier = null;
-    private Instances dataUnpredicted;
-    private List<String> classes;
-    private ArrayList<Attribute> attributeList;
-    //put them in the same order, don't know if it really matters
-    private final Attribute attributeMinAco = new Attribute("MinAcoSMV");
-    private final Attribute attributeMaxAco = new Attribute("MaxAcoSMV");
-    private final Attribute attributeMeanAco = new Attribute("MeanAcoSMV");
-    private final Attribute attributeModeAco = new Attribute("ModeAcoSMV");
-    private final Attribute attributeStdAco = new Attribute("StdAcoSMV");
-
-    private final Attribute attributeMinLinAco = new Attribute("MinLinAcoSMV");
-    private final Attribute attributeMaxLinAco = new Attribute("MaxLinAcoSMV");
-    private final Attribute attributeMeanLinAco = new Attribute("MeanLinAcoSMV");
-    private final Attribute attributeModeLinAco = new Attribute("ModeLinAcoSMV");
-    private final Attribute attributeStdLinAco = new Attribute("StdLinAcoSMV");
-
-    private final Attribute attributeMinGyro = new Attribute("MinGyroSMV");
-    private final Attribute attributeMaxGyro = new Attribute("MaxGyroSMV");
-    private final Attribute attributeMeanGyro = new Attribute("MeanGyroSMV");
-    private final Attribute attributeModeGyro = new Attribute("ModeGyroSMV");
-    private final Attribute attributeStdGyro = new Attribute("StdGyroSMV");
-
-    private final Attribute attributeMinMagno = new Attribute("MinMagnoSMV");
-    private final Attribute attributeMaxMagno = new Attribute("MaxMagnoSMV");
-    private final Attribute attributeMeanMagno = new Attribute("MeanMagnoSMV");
-    private final Attribute attributeModeMagno = new Attribute("ModeMagnoSMV");
-    private final Attribute attributeStdMagno = new Attribute("StdMagnoSMV");
 
     private String predictedActivity;
 
     private Sensor accelero;
-    private Sensor lin_accelero;
-    private Sensor gyro;
     private Sensor magnetic;
     private Sensor prox;
 
     private SensorEventListener allsel;
-
-    private static double xGyr;
-    private static double yGyr;
-    private static double zGyr;
-    private long tGyr;
 
     private static double xAco;
     private static double yAco;
     private static double zAco;
     private long tAco;
 
-    private static double xLinAco;
-    private static double yLinAco;
-    private static double zLinAco;
-    private long tlin_Aco;
-
     private static double xMag;
     private static double yMag;
     private static double zMag;
     private long tMag;
-
-    public MultilayerPerceptron mp;
-    //private static  double xProx;
+   ;
 
     //declaring global thresholds
     private static long lastChange = 0;
     private static final long threshold = 500;
 
     //declaring path for CSV
-    File baseDir=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+    File baseDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
     String fileName = "AnalysisData.csv";
     String filePath = baseDir + File.separator + fileName;
     File f = new File(filePath);
     CSVWriter writer = null;
 
+    List<Double> ListXacco = new ArrayList<Double>();
+    List<Double> ListYacco = new ArrayList<Double>();
+    List<Double> ListZacco = new ArrayList<Double>();
+
+    List<Double> ListXmagno = new ArrayList<Double>();
+    List<Double> ListYmagno = new ArrayList<Double>();
+    List<Double> ListZmagno = new ArrayList<Double>();
+
+    private double MaxXacco;
+    private double MeanXacco;
+    private double MinXacco;
+    private double STDXacco;
+
+    private double MaxYacco;
+    private double MeanYacco;
+    private double MinYacco;
+    private double STDYacco;
+
+    private double MaxZacco;
+    private double MeanZacco;
+    private double MinZacco;
+    private double STDZacco;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -155,9 +145,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        
+
         stopButton = findViewById(R.id.stopButton);
         startButton = findViewById(R.id.startButton);
+
 
         predictData = true;
         predictDataSwitch = findViewById(R.id.predictDataSwitch);
@@ -171,93 +162,9 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.resultTextView);
         textView.setMovementMethod(new ScrollingMovementMethod());
-        
-        recordingAccelero = new HashMap<>(3);
-        recordingLinAccelero = new HashMap<>(3);
-        recordingGyro = new HashMap<>(3);
-        recordingMagno = new HashMap<>(3);
-        //recordingProx= new HashMap<>();
-
-        recording = new HashMap<>();
-        recording.put("Accelero", recordingAccelero);
-        recording.put("LinAccelero", recordingLinAccelero);
-        recording.put("Gyro", recordingGyro);
-        recording.put("Magno", recordingMagno);
-        //recording.put("Prox", recordingProx);
-
-        for (Map.Entry<String, Map<String, List<Double>>> mapEntry : recording.entrySet()) {
-            mapEntry.getValue().put("x", new ArrayList<Double>());
-            mapEntry.getValue().put("y", new ArrayList<Double>());
-            mapEntry.getValue().put("z", new ArrayList<Double>());
-            mapEntry.getValue().put("magnitude", new ArrayList<Double>());
-            recording.put(mapEntry.getKey(), mapEntry.getValue());
-        }
-        
-        AssetManager assetManager = getAssets();
-
-        try {
-            //mClassifier = (Classifier) weka.core.SerializationHelper.read(assetManager.open("model6.model"));
-           //mp=(MultilayerPerceptron) weka.core.SerializationHelper.read(assetManager.open("test.model"));
-
-            mp= (MultilayerPerceptron) (new ObjectInputStream(new FileInputStream("C:\\Users\\WhiteShadow\\Desktop\\ss\\dataCollector\\DataCollector\\challenge_3-Krisz\\app\\src\\main\\assets\\test.model"))).readObject();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Toast.makeText(this, "Model loaded", Toast.LENGTH_SHORT).show();
-
-
-        predictedActivity = "";
-        classes = new ArrayList<String>(3) {
-            {
-                add("Aiming");
-                add("NotAimingStanding");
-                add("NotAimingHand");
-                add("NotAimingWalking");
-                add("AimingWalking");
-                add("Defending");
-                add("Shooting");
-                add("ShootingWalking");
-                add("Running");
-            }
-        };
-
-//        Log.d(MAIN_TAG, "the arraylist is: "+classes.toString());
-
-        attributeList = new ArrayList<Attribute>(5) {
-            {
-                add(attributeMinAco);
-                add(attributeMaxAco);
-                add(attributeMeanAco);
-                add(attributeModeAco);
-                add(attributeStdAco);
-                add(attributeMinLinAco);
-                add(attributeMaxLinAco);
-                add(attributeMeanLinAco);
-                add(attributeModeLinAco);
-                add(attributeStdLinAco);
-                add(attributeMinGyro);
-                add(attributeMaxGyro);
-                add(attributeMeanGyro);
-                add(attributeModeGyro);
-                add(attributeStdGyro);
-                add(attributeMinMagno);
-                add(attributeMaxMagno);
-                add(attributeMeanMagno);
-                add(attributeModeMagno);
-                add(attributeStdMagno);
-                Attribute attributeClass = new Attribute("@@class@@", classes);
-                add(attributeClass);
-            }
-        };
-        dataUnpredicted = new Instances("TestInstances", attributeList, 100 );
-        dataUnpredicted.setClassIndex(dataUnpredicted.numAttributes() - 1);
-        Toast.makeText(this, Attribute.toString(dataUnpredicted.attribute(0)), Toast.LENGTH_SHORT).show();
-
-
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        // CSV File exist
+        // CSV File exists
         if (f.exists() && !f.isDirectory()) {
             FileWriter mFileWriter = null;
             try {
@@ -269,25 +176,23 @@ public class MainActivity extends AppCompatActivity {
         }
         //CSV File does not exist
         else {
-            Log.d("Test","I'm in the eslse");
+            Log.d("Test", "I'm in the eslse");
             try {
                 writer = new CSVWriter(new FileWriter(filePath), ',');
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-            String[] data={"Activity","MinAcoSMV", "MaxAcoSMV", "MeanAcoSMV","ModeAcoSMV","StdAcoSMV"
-                    ,"MinLinAcoSMV", "MaxLinAcoSMV", "MeanLinAcoSMV","ModeLinAcoSMV","StdLinAcoSMV",
-                    "MinGyroSMV", "MaxGyroSMV", "MeanGyroSMV","ModeGyroSMV","StdGyroSMV",
-                    "MinMagnoSMV", "MaxMagnoSMV", "MeanMagnoSMV","ModeMagnoSMV","StdMagnoSMV"
+            String[] data = {"Activity",
+                    "MaxXacco", "MeanXacco", "MinXacco", "STDXacco",
+                    "MaxYacco", "MeanYacco", "MinYacco", "STDYacco",
+                    "MaxZacco", "MeanZacco", "MinZacco", "STDZacco","tAcco"
             };
             writer.writeNext(data);
-
-            //Log.d("Test","I managed to write the headers");
 
             try {
                 writer.close();
             } catch (IOException e) {
+                Toast.makeText(this, "Writer is broken", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
 
@@ -295,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 mFileWriter = new FileWriter(filePath, true);
             } catch (IOException e) {
+                Toast.makeText(this, "Writer is broken", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
             writer = new CSVWriter(mFileWriter);
@@ -306,39 +212,23 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.options_menu, menu);
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Toast.makeText(this, "Selected Item: " +item.getTitle(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Selected Item: " + item.getTitle(), Toast.LENGTH_SHORT).show();
         switch (item.getItemId()) {
             case R.id.aiming:
-                currActivity="Aiming";
-                return true;
-            case R.id.NotAimingHand:
-                currActivity="NotAimingHand";
+                currActivity = "Aiming";
                 return true;
             case R.id.defending:
-                currActivity="Defending";
+                currActivity = "Defending";
                 return true;
             case R.id.shooting:
-                currActivity="Shooting";
+                currActivity = "Shooting";
                 return true;
-            case R.id.NotAimingStanding:
-                currActivity="NotAimingStanding";
-                return true;
-            case R.id.ShootingWalking:
-                currActivity="ShootingWalking";
-                return true;
-            case  R.id.NotAimingWalking:
-               currActivity="NotAimingWalking";
-                return true;
-            case R.id.AimingWalking:
-                currActivity="AimingWalking";
-                return true;
-            case R.id.Running:
-                currActivity="Running";
-                return true;
+
             default:
-                currActivity="NoActivitySelected";
+                currActivity = "NoActivitySelected";
                 return true;
         }
     }
@@ -352,21 +242,17 @@ public class MainActivity extends AppCompatActivity {
         try {
             TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException e) {
+            Toast.makeText(this, "Scan is broken", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
         // register sensor and Activity from field
         accelero = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        lin_accelero = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        //magnetic = sm.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-        gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         magnetic = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        prox=sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        
+        prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+
         allsel = new AllSensorEventListener();
         sm.registerListener(allsel, accelero, SensorManager.SENSOR_DELAY_FASTEST);
-        sm.registerListener(allsel, lin_accelero, SensorManager.SENSOR_DELAY_FASTEST);
-        sm.registerListener(allsel, gyro, SensorManager.SENSOR_DELAY_FASTEST);
         sm.registerListener(allsel, prox, SensorManager.SENSOR_DELAY_FASTEST);
         sm.registerListener(allsel, magnetic, SensorManager.SENSOR_DELAY_FASTEST);
     }
@@ -376,322 +262,213 @@ public class MainActivity extends AppCompatActivity {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
-            String result = "";
 
             if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                //float [] mySensorEvent={0, 0, 0};
+                //float[] mySensorSmooth={};
+                //mySensorEvent=lowPass(sensorEvent.values, accelVals);
                 xAco = sensorEvent.values[0];
                 yAco = sensorEvent.values[1];
                 zAco = sensorEvent.values[2];
                 tAco = sensorEvent.timestamp;
-                double magnitudeAco = magnitude(xAco, yAco, zAco);
+                ListXacco.add(xAco);
+                ListYacco.add(yAco);
+                ListZacco.add(zAco);
+                //textView.append(Float.toString(mySensorEvent[1])+'\n');
+                //textView.append(Double.toString(mySensorEvent[1])+'\n');
 
-                recording.get("Accelero").get("x").add(xAco);
-                recording.get("Accelero").get("y").add(yAco);
-                recording.get("Accelero").get("z").add(zAco);
-                recording.get("Accelero").get("magnitude").add(magnitudeAco);
+            } else if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
 
-            } else if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-                xLinAco = sensorEvent.values[0];
-                yLinAco = sensorEvent.values[1];
-                zLinAco = sensorEvent.values[2];
-                tlin_Aco = sensorEvent.timestamp;
-                double magnitudeLinAco = magnitude(xLinAco, yLinAco, zLinAco);
-
-                recording.get("LinAccelero").get("x").add(xLinAco);
-                recording.get("LinAccelero").get("y").add(yLinAco);
-                recording.get("LinAccelero").get("z").add(zLinAco);
-                recording.get("LinAccelero").get("magnitude").add(magnitudeLinAco);
-
-            }
-            else if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                 xMag = sensorEvent.values[0];
                 yMag = sensorEvent.values[1];
                 zMag = sensorEvent.values[2];
                 tMag = sensorEvent.timestamp;
-                double magnitudeMag = magnitude(xMag, yMag, zMag);
 
-                recording.get("Magno").get("x").add(xMag);
-                recording.get("Magno").get("y").add(yMag);
-                recording.get("Magno").get("z").add(zMag);
-                recording.get("Magno").get("magnitude").add(magnitudeMag);
+                ListXmagno.add(xMag);
+                ListYmagno.add(yMag);
+                ListZmagno.add(zMag);
 
-            }
-            else if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-                xGyr = sensorEvent.values[0];
-                yGyr = sensorEvent.values[1];
-                zGyr = sensorEvent.values[2];
-                tGyr = sensorEvent.timestamp;
-                double magnitudeGyr = magnitude(xGyr, yGyr, zGyr);
 
-                recording.get("Gyro").get("x").add(xGyr);
-                recording.get("Gyro").get("y").add(yGyr);
-                recording.get("Gyro").get("z").add(zGyr);
-                recording.get("Gyro").get("magnitude").add(magnitudeGyr);
-            }
-            else if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+            } else if (sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
                 if (sensorEvent.values[0] >= -PROX_SENSOR_SENSITIVITY && sensorEvent.values[0] <= PROX_SENSOR_SENSITIVITY) {
-                    //near
-                    Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
-                    proximity="near";
+
+                    //Toast.makeText(getApplicationContext(), "near", Toast.LENGTH_SHORT).show();
+                    proximity = "near";
                 } else {
-                    //far
-                    proximity="far";
-                    Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
+                    proximity = "far";
+                    //Toast.makeText(getApplicationContext(), "far", Toast.LENGTH_SHORT).show();
                 }
             }
 
             if (System.currentTimeMillis() - lastChange > threshold) {
                 lastChange = System.currentTimeMillis();
+                    if (predictData && currActivity != "NoActivitySelected") {
+                        MaxXacco=Maximum(ListXacco);
+                        MeanXacco=Mean(ListXacco);
+                        MinXacco=Minimum(ListXacco);
+                        STDXacco=StandardDev(ListXacco);
 
-                final Map<String, Double> acceleroMap = new HashMap<>();
-                final Map<String, Double> linAcceleroMap = new HashMap<>();
-                final Map<String, Double> gyroMap = new HashMap<>();
-                final Map<String, Double> magnoMap = new HashMap<>();
+                        MaxYacco=Maximum(ListYacco);
+                        MeanYacco=Mean(ListYacco);
+                        MinYacco=Minimum(ListYacco);
+                        STDYacco=StandardDev(ListYacco);
 
+                        MaxZacco=Maximum(ListZacco);
+                        MeanZacco=Mean(ListZacco);
+                        MinZacco=Minimum(ListZacco);
+                        STDZacco=StandardDev(ListZacco);
 
-                for (Map.Entry<String, Map<String, List<Double>>> mapEntry : recording.entrySet()) {
-                    List<Double> list = mapEntry.getValue().get("magnitude");
-                    Log.d(MAIN_TAG, list.toString());
-                    if (!calc.IsEmpty(list)) {
-                        switch (mapEntry.getKey()) {
-                            case "Accelero":
-                                acceleroMap.put("min", calc.Minimum(list));
-                                acceleroMap.put("max", calc.Maximum(list));
-                                acceleroMap.put("std", calc.StandardDev(list));
-                                acceleroMap.put("mean", calc.Mean(list));
-                                acceleroMap.put("mode", calc.Mode(list));
-                                break;
-                            case "LinAccelero":
-                                linAcceleroMap.put("min", calc.Minimum(list));
-                                linAcceleroMap.put("max", calc.Maximum(list));
-                                linAcceleroMap.put("std", calc.StandardDev(list));
-                                linAcceleroMap.put("mean", calc.Mean(list));
-                                linAcceleroMap.put("mode", calc.Mode(list));
-                                break;
-                            case "Gyro":
-                                gyroMap.put("min", calc.Minimum(list));
-                                gyroMap.put("max", calc.Maximum(list));
-                                gyroMap.put("std", calc.StandardDev(list));
-                                gyroMap.put("mean", calc.Mean(list));
-                                gyroMap.put("mode", calc.Mode(list));
-                                break;
-                            case "Magno":
-                                magnoMap.put("min", calc.Minimum(list));
-                                magnoMap.put("max", calc.Maximum(list));
-                                magnoMap.put("std", calc.StandardDev(list));
-                                magnoMap.put("mean", calc.Mean(list));
-                                magnoMap.put("mode", calc.Mode(list));
-                                break;
+                        ListXacco.clear();
+                        ListYacco.clear();
+                        ListZacco.clear();
+
+                        double toPrintSensor=-777;
+                        predictedActivity="NoActivity";
+                        if(MeanYacco>8.49 && MeanYacco<8.65) { //done with one_sigma
+                            toPrintSensor=MeanYacco;
+                            predictedActivity="Aiming sigma_1";
                         }
-                    } else {
-                        switch (mapEntry.getKey()) {
-                            case "Accelero":
-                                acceleroMap.put("min", 0.0);
-                                acceleroMap.put("max", 0.0);
-                                acceleroMap.put("std", 0.0);
-                                acceleroMap.put("mean", 0.0);
-                                acceleroMap.put("mode", 0.0);
-                                break;
-                            case "LinAccelero":
-                                linAcceleroMap.put("min", 0.0);
-                                linAcceleroMap.put("max", 0.0);
-                                linAcceleroMap.put("std", 0.0);
-                                linAcceleroMap.put("mean", 0.0);
-                                linAcceleroMap.put("mode", 0.0);
-                                break;
-                            case "Gyro":
-                                gyroMap.put("min", 0.0);
-                                gyroMap.put("max", 0.0);
-                                gyroMap.put("std", 0.0);
-                                gyroMap.put("mean", 0.0);
-                                gyroMap.put("mode", 0.0);
-                                break;
-                            case "Magno":
-                                magnoMap.put("min", 0.0);
-                                magnoMap.put("max", 0.0);
-                                magnoMap.put("std", 0.0);
-                                magnoMap.put("mean", 0.0);
-                                magnoMap.put("mode", 0.0);
-                                break;
+                        else if(MeanYacco>8.41 && MeanYacco<8.73){
+                            toPrintSensor=MeanYacco;
+                            predictedActivity="Aiming sigma_2";
                         }
+
+                        if(MeanZacco<-9.57&&MeanZacco>-9.77)
+                        {  if(proximity=="near")
+                            predictedActivity="Defending sigma_1 "+' '+proximity;
+                        else
+                            predictedActivity="Defending sigma_1";
+                            toPrintSensor=MeanZacco;
+                        }
+                        else if(MeanZacco<-9.47&&MeanZacco>-9.87){
+                            if(proximity=="near")
+                                predictedActivity="Defending sigma_2 "+' '+proximity;
+                            else
+                                predictedActivity="Defending sigma_2";
+                            toPrintSensor=MeanZacco;
+                            }
+                        if(MeanXacco>9.52&&MeanXacco<9.70) {
+                            toPrintSensor=MeanXacco;
+                            predictedActivity = "Shooting sigma_1";
+                        }
+                        else if(MeanXacco>9.43&&MeanXacco<9.79) {
+                            toPrintSensor=MeanXacco;
+                            predictedActivity = "Shooting sigma_2";
+                        }
+
+                        if(!predictedActivity.equals("NoActivity"))
+                        {
+                            Toast.makeText(getApplicationContext(),predictedActivity,Toast.LENGTH_SHORT).show();
+                            textView.append(Double.toString(toPrintSensor)+'\n');
+                        }
+                        if (sendData && !currActivity .equals("NoActivitySelected")) {
+                            String[] myData = {currActivity,
+                                    Double.toString(MaxXacco),
+                                    Double.toString(MeanXacco),
+                                    Double.toString(MinXacco),
+                                    Double.toString(STDXacco),
+                                    Double.toString(MaxYacco),
+                                    Double.toString(MeanYacco),
+                                    Double.toString(MinYacco),
+                                    Double.toString(STDYacco),
+                                    Double.toString(MaxZacco),
+                                    Double.toString(MeanZacco),
+                                    Double.toString(MinZacco),
+                                    Double.toString(STDZacco),
+                                    Double.toString((tAco))
+                            };
+                   myDataList.add(myData);
                     }
+
+
                 }
-                resetRecording();
-                DenseInstance newInstance = new DenseInstance(dataUnpredicted.numAttributes()) {
-                    {
-//
-                        setValue( attributeMinAco, acceleroMap.get("min"));
-                        setValue( attributeMaxAco, acceleroMap.get("max"));
-                        setValue( attributeMeanAco,acceleroMap.get("mean") );
-                        setValue( attributeModeAco,acceleroMap.get("mode") ) ;
-                        setValue( attributeStdAco, acceleroMap.get("std") ) ;
-                        
-                        setValue( attributeMinGyro,gyroMap.get("min") );
-                        setValue( attributeMaxGyro,gyroMap.get("max") );
-                        setValue( attributeMeanGyro,gyroMap.get("mean") );
-                        setValue( attributeModeGyro,gyroMap.get("mode") );
-                        setValue( attributeStdGyro,gyroMap.get("std") ) ;
-                        
-                        setValue( attributeMinLinAco, linAcceleroMap.get("min") );
-                        setValue( attributeMaxLinAco, linAcceleroMap.get("max") );
-                        setValue( attributeMeanLinAco, linAcceleroMap.get("mean") );
-                        setValue( attributeModeLinAco, linAcceleroMap.get("mode") ) ;
-                        setValue( attributeStdLinAco, linAcceleroMap.get("std") ) ;
+            }
+        }
 
-                        setValue( attributeMinMagno, magnoMap.get("min") );
-                        setValue( attributeMaxMagno, magnoMap.get("max") );
-                        setValue( attributeMeanMagno, magnoMap.get("mean") );
-                        setValue( attributeModeMagno, magnoMap.get("mode") ) ;
-                        setValue( attributeStdMagno, magnoMap.get("std") ) ;
-
-                    }
-                };
-
-                double[] confidence={99};
-                double predictionDouble = 0;
-                //predictData=false;
-                predictData=true;
-                if (predictData) {
-                    newInstance.setDataset(dataUnpredicted);
-                    try {
-                        predictionDouble = mp.classifyInstance(newInstance);
-                        predictedActivity = newInstance.classAttribute().value((int) predictionDouble);
-
-                        Log.d(MAIN_TAG, "the prediction was: "+ predictionDouble + " which i think is: " + predictedActivity);
-
-                        confidence=mp.distributionForInstance(newInstance);
-                        if(mp.equals(null))
-                        Toast.makeText(getApplicationContext(),"NotClassified", Toast.LENGTH_SHORT).show();
+        
 
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    predictionDouble = -1;
-                    predictedActivity = "None";
-                }
-
-                String baseInformation = "currAct= " + currActivity +
-                        ", predDoub= " + predictionDouble +
-                        ", predAct= " + predictedActivity
-                        + "Confidence was "+Double.toString(confidence[0]);
-
-                result +=  baseInformation;
-                Log.d(MAIN_TAG, "time: " + sensorEvent.timestamp + " " +result);
-
-                  if(sendData && currActivity!="NoActivitySelected"){
-                      String[] myData={currActivity,
-                              Double.toString(acceleroMap.get("min")),
-                              Double.toString(acceleroMap.get("max")),
-                              Double.toString(acceleroMap.get("mean")),
-                              Double.toString(acceleroMap.get("mode")),
-                              Double.toString(acceleroMap.get("std")),
-                              Double.toString(linAcceleroMap.get("min")),
-                              Double.toString(linAcceleroMap.get("max")),
-                              Double.toString(linAcceleroMap.get("mean")),
-                              Double.toString(linAcceleroMap.get("mode")),
-                              Double.toString(linAcceleroMap.get("std")),
-                              Double.toString(gyroMap.get("min")),
-                              Double.toString(gyroMap.get("max")),
-                              Double.toString(gyroMap.get("mean")),
-                              Double.toString(gyroMap.get("mode")),
-                              Double.toString(gyroMap.get("std")),
-                              Double.toString(magnoMap.get("min")),
-                              Double.toString(magnoMap.get("max")),
-                              Double.toString(magnoMap.get("mean")),
-                              Double.toString(magnoMap.get("mode")),
-                              Double.toString(magnoMap.get("std"))
-                      };
-                      //writer.writeNext(myData);
-                      //String str = TextUtils.join(",", myData);
-                      //textView.append(str+'\n');
-                      textView.append(baseInformation+"\n");
-                      myDataList.add(myData);
-                  }
-
+            @Override
+            public void onAccuracyChanged (Sensor sensor,int i){
 
             }
         }
 
 
-        @Override
-        public void onAccuracyChanged (Sensor sensor,int i){
+        public void stopScan(View view) {
+            stopButton.setEnabled(false);
+            startButton.setEnabled(true);
+
+            sm.unregisterListener(allsel);
 
         }
-    }
 
-
-    public void stopScan(View view){
-        stopButton.setEnabled(false);
-        startButton.setEnabled(true);
-
-        sm.unregisterListener(allsel);
-        groupNr++;
-
-    }
-
-    public void endApp(View view) {
-        finish();
-        try {
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-public void WriteData(View v)
-{
-    for (int i =0; i<myDataList.size(); i++)
-    {
-        writer.writeNext(myDataList.get(i));
-    }
-    myDataList.clear();
-}
-
-
-    public void resetRecording() {
-        for (Map.Entry<String, Map<String, List<Double>>> mapEntry : recording.entrySet()) {
-            for (String attribute : mapEntry.getValue().keySet()) {
-                mapEntry.getValue().put(attribute, new ArrayList<Double>());
+        public void endApp(View view) {
+            finish();
+            try {
+                writer.close();
+            } catch (IOException e) {
+                Toast.makeText(this, "Writer is broken", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
             }
-            recording.put(mapEntry.getKey(), mapEntry.getValue());
         }
-    }
 
-    public double magnitude(double x, double y, double z) {
-        return Math.sqrt(x*x + y*y + z*z);
-    }
+        public void WriteData(View v) {
+            for (int i = 0; i < myDataList.size(); i++) {
+                writer.writeNext(myDataList.get(i));
+            }
+            myDataList.clear();
+        }
 
-    public class PredictDataSwitchListener implements CompoundButton.OnCheckedChangeListener {
 
-        @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        public double magnitude(double x, double y, double z) {
+            return Math.sqrt(x * x + y * y + z * z);
+        }
+
+        public class PredictDataSwitchListener implements CompoundButton.OnCheckedChangeListener {
+
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
 //            Log.d(MAIN_TAG, "switched: "+compoundButton.toString());
-            predictData = b;
-            Toast.makeText(getApplicationContext(), "predict data changed to: " + predictData, Toast.LENGTH_SHORT).show();
+                predictData = b;
+                Toast.makeText(getApplicationContext(), "predict data changed to: " + predictData, Toast.LENGTH_SHORT).show();
+            }
         }
+
+        public class SendDataSwitchListener implements CompoundButton.OnCheckedChangeListener {
+
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                sendData = b;
+                Toast.makeText(getApplicationContext(), "send data changed to: " + sendData, Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        public class SpinnerActivity extends Activity implements AdapterView.OnItemSelectedListener {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                currActivity = (String) adapterView.getItemAtPosition(i);
+                Log.d(MAIN_TAG, currActivity);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+
+        }
+
+        protected float[] lowPass( float[] input, float[] output ) {
+            if ( output == null ){
+                float[] copy=new float[3];
+                System.arraycopy(input, 0, copy, 0, input.length);
+                return  copy;
+            }
+
+            for ( int i=0; i<input.length; i++ ) {
+                output[i] = output[i] + ALPHA * (input[i] - output[i]);
+            }
+            return output;
     }
 
-    public class SendDataSwitchListener implements CompoundButton.OnCheckedChangeListener {
-
-        @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-            sendData = b;
-            Toast.makeText(getApplicationContext(), "send data changed to: " + sendData, Toast.LENGTH_SHORT).show();
-        }
     }
-
-    public class SpinnerActivity extends Activity implements AdapterView.OnItemSelectedListener {
-        @Override
-        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-            currActivity = (String) adapterView.getItemAtPosition(i);
-            Log.d(MAIN_TAG, currActivity);
-        }
-
-        @Override
-        public void onNothingSelected(AdapterView<?> adapterView) {
-
-        }
-
-    }
-}
